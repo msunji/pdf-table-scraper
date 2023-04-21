@@ -6,7 +6,7 @@ name = "pypi"
 [packages]
 streamlit = "*"
 pandas = "*"
-pdfplumber = "*"
+tabula-py = "*"
 
 [dev-packages]
 
