@@ -1,27 +1,28 @@
 import pdfplumber as plumber
-import tabula
 import pandas as pd
 
 # # Read PDF pages 1-7 only
 pdf = plumber.open("./files/April18.pdf")
 p0 = pdf.pages[0]
-cropped = p0.crop((33.37, 129.45, p0.width, p0.height))
+cropped = p0.crop((32.07, 140.37, p0.width, 604+140.37))
 
-im = cropped.to_image();
-im.debug_tablefinder({
+# im = cropped.to_image()
+# im.debug_tablefinder({
+#     "horizontal_strategy": "text",
+#     "vertical_strategy": "text",
+#     "snap_y_tolerance": 5,
+#     "join_y_tolerance": 2,
+# })
+# im.save("debug.png")
+
+# Test tables
+table = cropped.extract_tables(table_settings={
     "horizontal_strategy": "text",
-    "explicit_vertical_lines": [34.39, 110, 156.7, 195, 230, 263.09, 305, 336.24, 400, 461, 579]
+    "vertical_strategy": "text",
+    "snap_y_tolerance": 5,
+    "join_y_tolerance": 2,
 })
-im.save("debug.png")
-# p0.crop()
-# lines = p0.extract_text()
-# print(len(lines))
-# print(lines)
-# dfs = tabula.read_pdf('./files/April18.pdf', pages="1-7", columns=[34.39, 110, 156.7, 195, 230, 263.09, 305, 336.24, 400, 461, 579], multiple_tables=False, stream=True)
-# print(dfs)
-
-
-
+print(table)
 
 # Clean data
 # Only get first and last columns
