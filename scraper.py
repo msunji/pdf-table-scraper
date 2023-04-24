@@ -1,7 +1,6 @@
 import pdfplumber as plumber
 import pandas as pd
 
-# # Read PDF pages 1-7 only
 # Open PDF to extract
 pdf = plumber.open("./files/April18.pdf")
 
@@ -19,11 +18,8 @@ def extractTables(page):
     cleaned_table = [row for row in table[0] if not '' in row[1:]]
     return cleaned_table
 
-# Clean table
-# Remember to only get the first element in table list
-# no_blanks should be a list of lists with lists containing strings, numbers and '-' symbols
-# no_blanks = [row for row in table[0] if not '' in row[1:]]
-# print(no_blanks)
+# Extract tables from pages 1-7 of the report
+# Append all tables to all_tables
 all_tables = []
 for index, page in enumerate(pdf.pages):
     new_table = extractTables(page)
