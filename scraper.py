@@ -3,7 +3,7 @@ import gspread as gs
 import pdfplumber as plumber
 import pandas as pd
 
-# Work with Gsheets
+# GSheets credentials dict
 credentials = {
   "type": os.getenv("GAPI_TYPE"),
   "project_id": os.getenv("PROJECT_ID"),
@@ -16,14 +16,6 @@ credentials = {
   "auth_provider_x509_cert_url": os.getenv("AUTH_CERT_URL"),
   "client_x509_cert_url": os.getenv("CLIENT_CERT_URL")
 }
-
-gc = gs.service_account_from_dict(credentials)
-equity_sh = gc.open("PH Equity Data")
-# Get worksheet
-stocks_ws = equity_sh.worksheet("stocks")
-net_foreign_ws = equity_sh.worksheet("daily_net_foreign")
-# Get stocks list
-stocks_list = stocks_ws.col_values(1)
 
 # Visual debugging
 def debug_pdf(page):
@@ -56,10 +48,11 @@ def extractTables(page):
     Clean extracted table first. Remember to only get the first element in table list
     so you're not left with overly nested lists.
     cleaned_table is a list with lists containing strings, numbers, and '-' symbols.
+    It also omits the full company name (first column)
 
     In other words, blank rows parsed by extract_tables should be removed accordingly.
     """
-
+    # Remove blanks
     no_blanks_list = [row for row in table[0] if not '' in row[1:]]
     # Remove the first element in each list (full company name)
     cleaned_list = [list[1:] for list in no_blanks_list]
@@ -78,34 +71,64 @@ def scrape_pdfs(pdf):
           break
     return all_tables
 
-# Open PDF to extract
+def clean_data(data):
+  df = pd.DataFrame(data)
+
+  # Replace blank cells ('-') with zero
+  # Also remove commas from all cells
+  df = (df.replace('[-]', 0, regex=True).replace('[,]', '', regex=True))
+  # Add column names
+  df.columns = ["Symbol", "Bid", "Ask", "Open", "High", "Low", "Close", "Volume", "Value PHP", "Net Foreign"]
+  # Convert () to negative number
+  df["Net Foreign"] = (df["Net Foreign"].replace('[(]', '-', regex=True).replace('[)]', '', regex=True))
+  # Add date column -- date is date when data is collected
+  df["Date"] = pd.to_datetime('today').strftime('%m-%d-%Y')
+  # Rearrange columns
+  df = df.reindex(columns=["Symbol", "Date", "Bid", "Ask", "Open", "High", "Low", "Close", "Volume", "Value PHP", "Net Foreign"])
+
+  # Set data types
+  data_types = {
+    "Symbol": object,
+    "Bid": float,
+    "Ask": float,
+    "Open": float,
+    "High": float,
+    "Low": float,
+    "Close": float,
+    "Volume": float,
+    "Value PHP":  float,
+    "Net Foreign": float,
+  }
+
+  df = df.astype(data_types)
+
+  # Filter dataframe to stocks in portfolio
+  portfolio_df = df[df["Symbol"].isin(stocks_list)]
+  print(portfolio_df.head())
+  # Return clean dataframe
+  return portfolio_df
+
+gc = gs.service_account_from_dict(credentials)
+equity_sh = gc.open("PH Equity Data")
+# Get worksheets
+stocks_ws = equity_sh.worksheet("stocks")
+net_foreign_ws = equity_sh.worksheet("daily_net_foreign")
+# test_ws = equity_sh.worksheet("test_sheet")
+
+# Get stocks list
+stocks_list = stocks_ws.col_values(1)
+
 pdf = plumber.open("./files/April26.pdf")
 pdf_data = scrape_pdfs(pdf)
+cleaned_data = clean_data(pdf_data)
 
-# Convert to pandas dataframe
-df = pd.DataFrame(pdf_data)
 
-# Add column names
-df.columns = ["Symbol", "Bid", "Ask", "Open", "High", "Low", "Close", "Volume", "Value PHP", "Net Foreign"]
-
-# Add date column -- date is date when data is collected
-df["Date"] = pd.to_datetime('today').strftime('%m-%d-%Y')
-# Set data types
-
-# Convert () to negative float
-# df["Net Foreign"] = (df["Net Foreign"].replace('[(]', '-', regex=True).replace('[),]', '', regex=True).astype(float))
-
-# Filter dataframe to stocks in portfolio
-portfolio_df = df[df["Symbol"].isin(stocks_list)]
-
-# Rearrange columns
-portfolio_df = portfolio_df.reindex(columns=["Symbol", "Date", "Bid", "Ask", "Open", "High", "Low", "Close", "Volume", "Value PHP", "Net Foreign"])
 
 # Update spreadsheet
-# net_foreign_ws.update([net_foreign_portfolio.columns.values.tolist()] + net_foreign_portfolio.values.tolist())
-# net_foreign_ws.append_rows(net_foreign_portfolio.values.tolist())
+# test_ws.update([portfolio_df.columns.values.tolist()] + portfolio_df.values.tolist())
+# test_ws.append_rows(portfolio_df.values.tolist())
+
 # Export as CSV
-# print(net_foreign_portfolio.dtypes)
-portfolio_df.to_csv("April26.csv", index=False)
+cleaned_data.to_csv("April26.csv", index=False)
 
 
