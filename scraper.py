@@ -53,13 +53,17 @@ def extractTables(page):
     })
 
     """
-    Clean extracted table first. Remember to only get the first element in table list so you're not left with overly nested lists. cleaned_table is a list with lists containing strings, numbers, and '-' symbols.
+    Clean extracted table first. Remember to only get the first element in table list
+    so you're not left with overly nested lists.
+    cleaned_table is a list with lists containing strings, numbers, and '-' symbols.
 
     In other words, blank rows parsed by extract_tables should be removed accordingly.
     """
 
-    cleaned_table = [row for row in table[0] if not '' in row[1:]]
-    return cleaned_table
+    no_blanks_list = [row for row in table[0] if not '' in row[1:]]
+    # Remove the first element in each list (full company name)
+    cleaned_list = [list[1:] for list in no_blanks_list]
+    return cleaned_list
 
 def scrape_pdfs(pdf):
     """
@@ -75,29 +79,33 @@ def scrape_pdfs(pdf):
     return all_tables
 
 # Open PDF to extract
-pdf = plumber.open("./files/April25.pdf")
+pdf = plumber.open("./files/April26.pdf")
 pdf_data = scrape_pdfs(pdf)
 
 # Convert to pandas dataframe
 df = pd.DataFrame(pdf_data)
 
 # Add column names
-df.columns = ["Stock Name", "Symbol", "Bid", "Ask", "Open", "High", "Low", "Close", "Volume", "Value PHP", "Net Foreign"]
+df.columns = ["Symbol", "Bid", "Ask", "Open", "High", "Low", "Close", "Volume", "Value PHP", "Net Foreign"]
 
 # Add date column -- date is date when data is collected
 df["Date"] = pd.to_datetime('today').strftime('%m-%d-%Y')
+# Set data types
+
 # Convert () to negative float
-df["Net Foreign"] = (df["Net Foreign"].replace('[(]', '-', regex=True).replace('[),]', '', regex=True).astype(float))
+# df["Net Foreign"] = (df["Net Foreign"].replace('[(]', '-', regex=True).replace('[),]', '', regex=True).astype(float))
 
 # Filter dataframe to stocks in portfolio
-net_foreign_portfolio = df[df["Symbol"].isin(stocks_list)]
+portfolio_df = df[df["Symbol"].isin(stocks_list)]
 
 # Rearrange columns
-net_foreign_portfolio = net_foreign_portfolio.reindex(columns=["Stock Name", "Symbol", "Date", "Bid", "Ask", "Open", "High", "Low", "Close", "Volume", "Value PHP", "Net Foreign"])
+portfolio_df = portfolio_df.reindex(columns=["Symbol", "Date", "Bid", "Ask", "Open", "High", "Low", "Close", "Volume", "Value PHP", "Net Foreign"])
 
 # Update spreadsheet
-net_foreign_ws.update([net_foreign_portfolio.columns.values.tolist()] + net_foreign_portfolio.values.tolist())
+# net_foreign_ws.update([net_foreign_portfolio.columns.values.tolist()] + net_foreign_portfolio.values.tolist())
+# net_foreign_ws.append_rows(net_foreign_portfolio.values.tolist())
 # Export as CSV
-# portfolio.to_csv("April24.csv", index=False)
+# print(net_foreign_portfolio.dtypes)
+portfolio_df.to_csv("April26.csv", index=False)
 
 
