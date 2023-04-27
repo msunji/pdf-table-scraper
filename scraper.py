@@ -33,6 +33,16 @@ def debug_pdf(page):
   })
   img.save("debug.png")
 
+def extract_EOD_data(url):
+  try:
+    req = requests.get(url)
+    temp = BytesIO(req.content)
+    pdf = plumber.open(temp)
+    pdf_data = scrape_pdfs(pdf)
+  except:
+    print('Something went wrong')
+  return clean_data(pdf_data)
+
 def extractTables(page):
     """
     Extracts tables from each page of the PDF document.
@@ -120,21 +130,13 @@ net_foreign_ws = equity_sh.worksheet("daily_net_foreign")
 # Get stocks list
 stocks_list = stocks_ws.col_values(1)
 
-try:
-  req = requests.get("https://documents.pse.com.ph/market_report/April%2027,%202023-EOD.pdf")
-  pdf = plumber.open(BytesIO(req.content))
-except:
-  print('Something went wrong')
-
-# pdf = plumber.open("./files/April26.pdf")
-pdf_data = scrape_pdfs(pdf)
-cleaned_data = clean_data(pdf_data)
+cleaned_data = extract_EOD_data("https://documents.pse.com.ph/market_report/April%2027,%202023-EOD.pdf")
 
 # Append new values to spreadsheet
 # test_ws.update([portfolio_df.columns.values.tolist()] + portfolio_df.values.tolist())
-net_foreign_ws.append_rows(cleaned_data.values.tolist())
+# net_foreign_ws.append_rows(cleaned_data.values.tolist())
 
 # Export as CSV
-# cleaned_data.to_csv("April27.csv", index=False)
+cleaned_data.to_csv("April27.csv", index=False)
 
 
