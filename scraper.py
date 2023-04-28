@@ -136,19 +136,23 @@ def extract_EOD_data(url):
     print('Something went wrong')
   return clean_data(pdf_data, pdf_date)
 
+def get_todays_pdf_url():
+  date_str = datetime.today().strftime("%B-%d-%Y")
+  date_list = date_str.split("-")
+  return "https://documents.pse.com.ph/market_report/" + date_list[0] + "%20"+ date_list[1] + ",%20" + date_list[2]+ "-EOD.pdf"
+
 gc = gs.service_account_from_dict(credentials)
 equity_sh = gc.open("PH Equity Data")
 
 # Get worksheets
 net_foreign_ws = equity_sh.worksheet("daily_net_foreign")
-test_ws = equity_sh.worksheet("test_sheet")
 
-cleaned_data = extract_EOD_data("https://documents.pse.com.ph/market_report/April%2027,%202023-EOD.pdf")
+todays_pdf = get_todays_pdf_url()
+cleaned_data = extract_EOD_data(todays_pdf)
 
 # Append new values to spreadsheet
 # test_ws.update([portfolio_df.columns.values.tolist()] + portfolio_df.values.tolist())
-# net_foreign_ws.append_rows(cleaned_data.values.tolist())
-test_ws.append_rows(cleaned_data.values.tolist())
+net_foreign_ws.append_rows(cleaned_data.values.tolist())
 
 # Export as CSV
 # cleaned_data.to_csv("April27.csv", index=False)
