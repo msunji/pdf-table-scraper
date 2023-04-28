@@ -1,5 +1,7 @@
 import os
+import re
 from io import BytesIO
+from datetime import datetime
 import requests
 import gspread as gs
 import pdfplumber as plumber
@@ -19,15 +21,19 @@ credentials = {
   "client_x509_cert_url": os.getenv("CLIENT_CERT_URL")
 }
 
-def extract_EOD_data(url):
-  try:
-    req = requests.get(url)
-    temp = BytesIO(req.content)
-    pdf = plumber.open(temp)
-    pdf_data = scrape_pdfs(pdf)
-  except:
-    print('Something went wrong')
-  return clean_data(pdf_data)
+# Visual debugging
+# def debug_pdf(page):
+#   """
+#   Helps figure out if we're extracting the right thing.
+#   """
+#   img = page.to_image()
+#   img.debug_tablefinder({
+#     "horizontal_strategy": "text",
+#     "vertical_strategy": "text",
+#     "snap_y_tolerance": 5,
+#     "snap_x_tolerance": 5,
+#   })
+#   img.save("debug.png")
 
 def extractTables(page):
     """
@@ -58,30 +64,43 @@ def extractTables(page):
 
 def scrape_pdfs(pdf):
     """
+    Get PDF EOD date
+    """
+    page1 = pdf.pages[0]
+    cropped_header = page1.crop((29.2, 107.76, page1.width, 16.3+107.76))
+    date_str = cropped_header.extract_text()
+    date_parsed = datetime.strptime(date_str, "%B %d, %Y").strftime("%m-%d-%Y")
+
+    """
     Scrape and compiled tables from pages 1-7 of the PDF document.
-    Returns a list of all scraped and cleaned data.
+    Returns a list of all scraped and cleaned data, as well as the date
+    written in the parsed PDF
     """
     all_tables = []
     for index, page in enumerate(pdf.pages):
-      new_table = extractTables(page)
+      new_table= extractTables(page)
       all_tables.extend(new_table)
       if index == 6:
           break
-    return all_tables
+    return all_tables, date_parsed
 
-def clean_data(data):
+def clean_data(data, date):
   df = pd.DataFrame(data)
   stocks_ws = equity_sh.worksheet("stocks")
 
   # Replace blank cells ('-') with zero
   # Also remove commas from all cells
   df = (df.replace('[-]', 0, regex=True).replace('[,]', '', regex=True))
+
   # Add column names
   df.columns = ["Symbol", "Bid", "Ask", "Open", "High", "Low", "Close", "Volume", "Value PHP", "Net Foreign"]
+
   # Convert () to negative number
   df["Net Foreign"] = (df["Net Foreign"].replace('[(]', '-', regex=True).replace('[)]', '', regex=True))
-  # Add date column -- date is date when data is collected
-  df["Date"] = pd.to_datetime('today').strftime('%m-%d-%Y')
+
+  # Add date column using date parsed from PDF
+  df["Date"] = date
+
   # Rearrange columns
   df = df.reindex(columns=["Symbol", "Date", "Bid", "Ask", "Open", "High", "Low", "Close", "Volume", "Value PHP", "Net Foreign"])
 
@@ -103,13 +122,24 @@ def clean_data(data):
 
   # Filter dataframe to stocks in portfolio
   portfolio_df = df[df["Symbol"].isin(stocks_ws.col_values(1))]
+  print(portfolio_df.head())
   # Return clean dataframe
   return portfolio_df
 
+def extract_EOD_data(url):
+  try:
+    req = requests.get(url)
+    temp = BytesIO(req.content)
+    pdf = plumber.open(temp)
+    pdf_data, pdf_date = scrape_pdfs(pdf)
+  except:
+    print('Something went wrong')
+  return clean_data(pdf_data, pdf_date)
+
 gc = gs.service_account_from_dict(credentials)
 equity_sh = gc.open("PH Equity Data")
-# Get worksheets
 
+# Get worksheets
 net_foreign_ws = equity_sh.worksheet("daily_net_foreign")
 test_ws = equity_sh.worksheet("test_sheet")
 
@@ -122,8 +152,3 @@ test_ws.append_rows(cleaned_data.values.tolist())
 
 # Export as CSV
 # cleaned_data.to_csv("April27.csv", index=False)
-
-# with requests.get("https://www.pse.com.ph/market-report/") as response:
-#    print(response.content)
-
-
