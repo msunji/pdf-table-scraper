@@ -4,7 +4,6 @@ import requests
 import gspread as gs
 import pdfplumber as plumber
 import pandas as pd
-import tracemalloc
 
 # GSheets credentials dict
 credentials = {
@@ -72,6 +71,7 @@ def scrape_pdfs(pdf):
 
 def clean_data(data):
   df = pd.DataFrame(data)
+  stocks_ws = equity_sh.worksheet("stocks")
 
   # Replace blank cells ('-') with zero
   # Also remove commas from all cells
@@ -102,22 +102,16 @@ def clean_data(data):
   df = df.astype(data_types)
 
   # Filter dataframe to stocks in portfolio
-  portfolio_df = df[df["Symbol"].isin(stocks_list)]
-  print(portfolio_df.head())
+  portfolio_df = df[df["Symbol"].isin(stocks_ws.col_values(1))]
   # Return clean dataframe
   return portfolio_df
-
-tracemalloc.start()
 
 gc = gs.service_account_from_dict(credentials)
 equity_sh = gc.open("PH Equity Data")
 # Get worksheets
-stocks_ws = equity_sh.worksheet("stocks")
+
 net_foreign_ws = equity_sh.worksheet("daily_net_foreign")
 test_ws = equity_sh.worksheet("test_sheet")
-
-# Get stocks list
-stocks_list = stocks_ws.col_values(1)
 
 cleaned_data = extract_EOD_data("https://documents.pse.com.ph/market_report/April%2027,%202023-EOD.pdf")
 
@@ -126,8 +120,6 @@ cleaned_data = extract_EOD_data("https://documents.pse.com.ph/market_report/Apri
 # net_foreign_ws.append_rows(cleaned_data.values.tolist())
 test_ws.append_rows(cleaned_data.values.tolist())
 
-print(tracemalloc.get_traced_memory())
-tracemalloc.stop()
 # Export as CSV
 # cleaned_data.to_csv("April27.csv", index=False)
 
