@@ -4,6 +4,7 @@ import requests
 import gspread as gs
 import pdfplumber as plumber
 import pandas as pd
+import tracemalloc
 
 # GSheets credentials dict
 credentials = {
@@ -18,20 +19,6 @@ credentials = {
   "auth_provider_x509_cert_url": os.getenv("AUTH_CERT_URL"),
   "client_x509_cert_url": os.getenv("CLIENT_CERT_URL")
 }
-
-# Visual debugging
-def debug_pdf(page):
-  """
-  Helps figure out if we're extracting the right thing.
-  """
-  img = page.to_image()
-  img.debug_tablefinder({
-    "horizontal_strategy": "text",
-    "vertical_strategy": "text",
-    "snap_y_tolerance": 5,
-    "snap_x_tolerance": 5,
-  })
-  img.save("debug.png")
 
 def extract_EOD_data(url):
   try:
@@ -120,12 +107,14 @@ def clean_data(data):
   # Return clean dataframe
   return portfolio_df
 
+tracemalloc.start()
+
 gc = gs.service_account_from_dict(credentials)
 equity_sh = gc.open("PH Equity Data")
 # Get worksheets
 stocks_ws = equity_sh.worksheet("stocks")
 net_foreign_ws = equity_sh.worksheet("daily_net_foreign")
-# test_ws = equity_sh.worksheet("test_sheet")
+test_ws = equity_sh.worksheet("test_sheet")
 
 # Get stocks list
 stocks_list = stocks_ws.col_values(1)
@@ -135,8 +124,14 @@ cleaned_data = extract_EOD_data("https://documents.pse.com.ph/market_report/Apri
 # Append new values to spreadsheet
 # test_ws.update([portfolio_df.columns.values.tolist()] + portfolio_df.values.tolist())
 # net_foreign_ws.append_rows(cleaned_data.values.tolist())
+test_ws.append_rows(cleaned_data.values.tolist())
 
+print(tracemalloc.get_traced_memory())
+tracemalloc.stop()
 # Export as CSV
-cleaned_data.to_csv("April27.csv", index=False)
+# cleaned_data.to_csv("April27.csv", index=False)
+
+# with requests.get("https://www.pse.com.ph/market-report/") as response:
+#    print(response.content)
 
 
