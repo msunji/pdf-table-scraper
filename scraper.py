@@ -148,7 +148,7 @@ equity_sh = gc.open("PH Equity Data")
 net_foreign_ws = equity_sh.worksheet("daily_net_foreign")
 
 todays_pdf = get_todays_pdf_url()
-cleaned_data = extract_EOD_data(todays_pdf)
+cleaned_data = extract_EOD_data("https://documents.pse.com.ph/market_report/November%2021,%202023-EOD.pdf")
 
 # Append new values to spreadsheet
 # test_ws.update([portfolio_df.columns.values.tolist()] + portfolio_df.values.tolist())
