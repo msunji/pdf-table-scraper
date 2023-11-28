@@ -128,6 +128,7 @@ def clean_data(data, date):
 
 def extract_EOD_data(url):
   try:
+    global pdf_data
     req = requests.get(url)
     temp = BytesIO(req.content)
     pdf = plumber.open(temp)
@@ -148,7 +149,7 @@ equity_sh = gc.open("PH Equity Data")
 net_foreign_ws = equity_sh.worksheet("daily_net_foreign")
 
 todays_pdf = get_todays_pdf_url()
-cleaned_data = extract_EOD_data("https://documents.pse.com.ph/market_report/November%2021,%202023-EOD.pdf")
+cleaned_data = extract_EOD_data("https://documents.pse.com.ph/market_report/November%2028,%202023-EOD.pdf")
 
 # Append new values to spreadsheet
 # test_ws.update([portfolio_df.columns.values.tolist()] + portfolio_df.values.tolist())
