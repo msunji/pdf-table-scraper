@@ -146,7 +146,7 @@ gc = gs.service_account_from_dict(credentials)
 equity_sh = gc.open("PH Equity Data")
 
 # Get worksheets
-net_foreign_ws = equity_sh.worksheet("daily_net_foreign")
+net_foreign_ws = equity_sh.worksheet("portfolio_eod_mkt_report")
 
 todays_pdf = get_todays_pdf_url()
 cleaned_data = extract_EOD_data("https://documents.pse.com.ph/market_report/November%2028,%202023-EOD.pdf")
