@@ -61,6 +61,7 @@ def extractTables(page):
     """
     # Remove blanks
     no_blanks_list = [row for row in table[0] if not '' in row[1:]]
+
     # Remove the first element in each list (full company name)
     cleaned_list = [list[1:] for list in no_blanks_list]
     return cleaned_list
@@ -148,11 +149,6 @@ def extract_EOD_data(url):
   except:
     print('Something went wrong')
   return clean_data(pdf_data, pdf_date)
-
-# def get_todays_pdf_url():
-#   date_str = datetime.today().strftime("%B-%d-%Y")
-#   date_list = date_str.split("-")
-#   return "https://documents.pse.com.ph/market_report/" + date_list[0] + "%20"+ date_list[1] + ",%20" + date_list[2]+ "-EOD.pdf"
 
 # Get worksheets
 portfolio_eod = equity_sh.worksheet("portfolio_eod_mkt_report")
