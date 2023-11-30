@@ -35,6 +35,9 @@ credentials = {
 #   })
 #   img.save("debug.png")
 
+gc = gs.service_account_from_dict(credentials)
+equity_sh = gc.open("PH Equity Data")
+
 def extractTables(page):
     """
     Extracts tables from each page of the PDF document.
@@ -86,7 +89,11 @@ def scrape_pdfs(pdf):
 
 def clean_data(data, date):
   df = pd.DataFrame(data)
-  stocks_ws = equity_sh.worksheet("stocks")
+
+  portfolio_stocks = equity_sh.worksheet("stocks").col_values(1)
+  wow_stocks = equity_sh.worksheet("test_gainers_losers").col_values(1)
+
+  stocks_to_scrape = list(set(portfolio_stocks + wow_stocks))
 
   # Replace blank cells ('-') with zero
   # Also remove commas from all cells
@@ -107,6 +114,7 @@ def clean_data(data, date):
   # Set data types
   data_types = {
     "Symbol": object,
+    "Date": object,
     "Bid": float,
     "Ask": float,
     "Open": float,
@@ -121,10 +129,14 @@ def clean_data(data, date):
   df = df.astype(data_types)
 
   # Filter dataframe to stocks in portfolio
-  portfolio_df = df[df["Symbol"].isin(stocks_ws.col_values(1))]
+  portfolio_df = df[df["Symbol"].isin(portfolio_stocks)]
+  wow_df = df[df["Symbol"].isin(wow_stocks)]
+
   print(portfolio_df.head())
+  print(wow_df.head())
+
   # Return clean dataframe
-  return portfolio_df
+  return portfolio_df, wow_df
 
 def extract_EOD_data(url):
   try:
@@ -137,23 +149,25 @@ def extract_EOD_data(url):
     print('Something went wrong')
   return clean_data(pdf_data, pdf_date)
 
-def get_todays_pdf_url():
-  date_str = datetime.today().strftime("%B-%d-%Y")
-  date_list = date_str.split("-")
-  return "https://documents.pse.com.ph/market_report/" + date_list[0] + "%20"+ date_list[1] + ",%20" + date_list[2]+ "-EOD.pdf"
-
-gc = gs.service_account_from_dict(credentials)
-equity_sh = gc.open("PH Equity Data")
+# def get_todays_pdf_url():
+#   date_str = datetime.today().strftime("%B-%d-%Y")
+#   date_list = date_str.split("-")
+#   return "https://documents.pse.com.ph/market_report/" + date_list[0] + "%20"+ date_list[1] + ",%20" + date_list[2]+ "-EOD.pdf"
 
 # Get worksheets
-net_foreign_ws = equity_sh.worksheet("portfolio_eod_mkt_report")
+portfolio_eod = equity_sh.worksheet("portfolio_eod_mkt_report")
+wow_eod = equity_sh.worksheet("wow_eod_mkt_report")
 
-todays_pdf = get_todays_pdf_url()
-cleaned_data = extract_EOD_data("https://documents.pse.com.ph/market_report/November%2028,%202023-EOD.pdf")
+# todays_pdf = get_todays_pdf_url()
+cleaned_data = extract_EOD_data("https://documents.pse.com.ph/market_report/November%2029,%202023-EOD.pdf")
+
+# Append new values to spreadsheet
+portfolio_eod.append_rows(cleaned_data[0].values.tolist())
+wow_eod.append_rows(cleaned_data[1].values.tolist())
 
 # Append new values to spreadsheet
 # test_ws.update([portfolio_df.columns.values.tolist()] + portfolio_df.values.tolist())
-net_foreign_ws.append_rows(cleaned_data.values.tolist())
+# portfolio_eod.append_rows(cleaned_data.values.tolist())
 
 # Export as CSV
-# cleaned_data.to_csv("April27.csv", index=False)
+# cleaned_data.to_csv("Nov21.csv", index=False)
