@@ -129,14 +129,14 @@ def clean_data(data, date):
 
   df = df.astype(data_types)
 
-  # Filter dataframe to stocks in portfolio
+  # Create separate dataframes for WoW data and portfolio data
   portfolio_df = df[df["Symbol"].isin(portfolio_stocks)]
   wow_df = df[df["Symbol"].isin(wow_stocks)]
 
   print(portfolio_df.head())
   print(wow_df.head())
 
-  # Return clean dataframe
+  # Return dataframes
   return portfolio_df, wow_df
 
 def extract_EOD_data(url):
@@ -160,10 +160,6 @@ cleaned_data = extract_EOD_data("https://documents.pse.com.ph/market_report/Nove
 # Append new values to spreadsheet
 portfolio_eod.append_rows(cleaned_data[0].values.tolist())
 wow_eod.append_rows(cleaned_data[1].values.tolist())
-
-# Append new values to spreadsheet
-# test_ws.update([portfolio_df.columns.values.tolist()] + portfolio_df.values.tolist())
-# portfolio_eod.append_rows(cleaned_data.values.tolist())
 
 # Export as CSV
 # cleaned_data.to_csv("Nov21.csv", index=False)
