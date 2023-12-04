@@ -7,19 +7,21 @@ import gspread as gs
 import pdfplumber as plumber
 import pandas as pd
 
+from modules import gsheet_actions
+
 # GSheets credentials dict
-credentials = {
-  "type": os.getenv("GAPI_TYPE"),
-  "project_id": os.getenv("PROJECT_ID"),
-  "private_key_id": os.getenv("PRIVATE_KEY_ID"),
-  "private_key": os.getenv("PRIVATE_KEY"),
-  "client_email": os.getenv("CLIENT_EMAIL"),
-  "client_id": os.getenv("CLIENT_ID"),
-  "auth_uri": os.getenv("AUTH_URI"),
-  "token_uri": os.getenv("TOKEN_URI"),
-  "auth_provider_x509_cert_url": os.getenv("AUTH_CERT_URL"),
-  "client_x509_cert_url": os.getenv("CLIENT_CERT_URL")
-}
+# credentials = {
+#   "type": os.getenv("GAPI_TYPE"),
+#   "project_id": os.getenv("PROJECT_ID"),
+#   "private_key_id": os.getenv("PRIVATE_KEY_ID"),
+#   "private_key": os.getenv("PRIVATE_KEY"),
+#   "client_email": os.getenv("CLIENT_EMAIL"),
+#   "client_id": os.getenv("CLIENT_ID"),
+#   "auth_uri": os.getenv("AUTH_URI"),
+#   "token_uri": os.getenv("TOKEN_URI"),
+#   "auth_provider_x509_cert_url": os.getenv("AUTH_CERT_URL"),
+#   "client_x509_cert_url": os.getenv("CLIENT_CERT_URL")
+# }
 
 # Visual debugging
 # def debug_pdf(page):
@@ -35,8 +37,8 @@ credentials = {
 #   })
 #   img.save("debug.png")
 
-gc = gs.service_account_from_dict(credentials)
-equity_sh = gc.open("PH Equity Data")
+# gc = gs.service_account_from_dict(credentials)
+# equity_sh = gc.open("PH Equity Data")
 
 def extractTables(page):
     """
@@ -142,7 +144,10 @@ def scrape_pdfs(pdf):
 def clean_data(data, date):
   df = pd.DataFrame(data)
 
-  portfolio_stocks = equity_sh.worksheet("stocks").col_values(1)
+  # Get portfolio stock codes
+  portfolio_stocks = getWSColVals("stocks", 1)
+
+  # portfolio_stocks = equity_sh.worksheet("stocks").col_values(1)
   # wow_stocks = equity_sh.worksheet("wow_report_stocks").col_values(1)
   # wow_stock_test = pd.DataFrame(equity_sh.worksheet("wow_report_stocks").get_all_records())
   # wow_stock_test.columns = ["Symbol", "Mid Cap or Other"]
@@ -205,15 +210,15 @@ def extract_EOD_data(url):
   return clean_data(pdf_data, pdf_date)
 
 # Get worksheets
-portfolio_eod = equity_sh.worksheet("portfolio_eod_mkt_report")
+# portfolio_eod = equity_sh.worksheet("portfolio_eod_mkt_report")
 # wow_eod = equity_sh.worksheet("wow_eod_mkt_report")
 
 # todays_pdf = get_todays_pdf_url()
-cleaned_data = extract_EOD_data("https://documents.pse.com.ph/market_report/November%2030,%202023-EOD.pdf")
+cleaned_data = extract_EOD_data("https://documents.pse.com.ph/market_report/December%2004,%202023-EOD.pdf")
 
 # Append new values to spreadsheet
-portfolio_eod.append_rows(cleaned_data.values.tolist())
+# portfolio_eod.append_rows(cleaned_data.values.tolist())
 # wow_eod.append_rows(cleaned_data.values.tolist())
 
 # Export as CSV
-# cleaned_data.to_csv("Nov21.csv", index=False)
+cleaned_data.to_csv("Nov21.csv", index=False)

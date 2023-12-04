@@ -16,10 +16,10 @@ credentials = {
 }
 
 all_sheets = gs.service_account_from_dict(credentials)
-ph_equity_sh = gc.open("PH Equity Data")
+ph_equity_sh = all_sheets.open("PH Equity Data")
 
 def getWorksheet(worksheet_name):
-  worksheet = equity_sh.worksheet
+  worksheet = equity_sh.worksheet(worksheet_name)
   return worksheet
 
 def getAllWSRecords(worksheet_name):
@@ -29,3 +29,6 @@ def getAllWSRecords(worksheet_name):
 def getWSColVals(worksheet_name, col_val):
   col_values = equity_sh.worksheet(worksheet_name).col_values(col_val)
   return col_values
+
+def updateSheet(worksheet_name, data):
+  worksheet_name.append_rows(data.tolist())
