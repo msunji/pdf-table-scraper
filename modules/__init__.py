@@ -1,1 +1,2 @@
-from .gsheet_actions import getWorksheet, getAllWSRecords, getWSColVals, updateSheet
+from .gsheet_actions import *
+print("Initialising modules")
