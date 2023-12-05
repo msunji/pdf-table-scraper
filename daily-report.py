@@ -145,7 +145,7 @@ def clean_data(data, date):
   df = pd.DataFrame(data)
 
   # Get portfolio stock codes
-  portfolio_stocks = getWSColVals("stocks", 1)
+  portfolio_stocks = gsheet_actions.getWSColVals("stocks", 1)
 
   # portfolio_stocks = equity_sh.worksheet("stocks").col_values(1)
   # wow_stocks = equity_sh.worksheet("wow_report_stocks").col_values(1)
