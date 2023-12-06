@@ -48,31 +48,31 @@ def clean_data(data, date, *ignore, report_type):
 
   if report_type.lower() == "daily":
     # Get portfolio stock codes
-    portfolio_stocks = gsheet_actions.getWSColVals("stocks", 1)
-    # Get destination worksheet for data
-    portfolio_eod = gsheet_actions.getWorksheet("portfolio_eod_mkt_report")
+    portfolio_stocks = gsheet_actions.get_ws_col_vals("stocks", 1)
 
     # Return filtered data - should only show portfolio stocks
     # Push new data to spreadsheet
-    return portfolio_eod.append_rows(
-      pdf_data[pdf_data["Symbol"].isin(portfolio_stocks)]
-      .values.tolist()
+    return (
+      gsheet_actions.update_sheet("test_worksheet", pdf_data[pdf_data["Symbol"].isin(portfolio_stocks)]
+      .values.tolist())
     )
   elif report_type.lower() == "weekly":
     # Get weekly report stock codes and respective categories (2 cols)
-    weekly_stocks = pd.DataFrame(gsheet_actions.getAllWSRecords("wow_report_stocks"), columns=["Symbol", "Mid Cap or Other"])
-
+    # weekly_stocks = pd.DataFrame(gsheet_actions.get_all_ws_recordscords("wow_report_stocks"))
+    weekly_stocks = gsheet_actions.get_all_ws_records("wow_report_stocks")
+    weekly_stocks_df = pd.DataFrame(weekly_stocks)
     # Get destination worksheet for data
-    weekly_report_data = gsheet_actions.getWorksheet("test_worksheet")
+    # weekly_report_data = gsheet_actions.get_worksheet("test_worksheet")
 
-    filtered_data = pdf_data[pdf_data["Symbol"].isin(list(weekly_stocks["Symbol"]))]
-    print(weekly_stocks["Symbol"].tolist())
+    # filtered_data = pdf_data[pdf_data["Symbol"].isin(list(weekly_stocks["Symbol"]))]
+    print(weekly_stocks_df)
 
-    return (
-      pd
-      .merge(filtered_data, weekly_stocks, on="Symbol")
-      .reindex(columns=["Symbol", "Mid Cap or Other", "Date", "Bid", "Ask", "Open", "High", "Low", "Close", "Volume", "Value PHP", "Net Foreign"])
-    )
+    return weekly_stocks
+    # return (
+    #   pd
+    #   .merge(filtered_data, weekly_stocks, on="Symbol")
+    #   .reindex(columns=["Symbol", "Mid Cap or Other", "Date", "Bid", "Ask", "Open", "High", "Low", "Close", "Volume", "Value PHP", "Net Foreign"])
+    # )
   else:
     raise TypeError("Keyword argument not recognised")
 
@@ -87,7 +87,7 @@ def extract_EOD_data(url, *ignore, report_type):
     print('Something went wrong')
   return clean_data(pdf_data, pdf_date, report_type=report_type)
 
-extract_EOD_data("https://documents.pse.com.ph/market_report/December%2005,%202023-EOD.pdf", report_type="weekly")
+extract_EOD_data("https://documents.pse.com.ph/market_report/December%2006,%202023-EOD.pdf", report_type="weekly")
 
 # wow_eod.append_rows(cleaned_data.values.tolist())
 
