@@ -47,7 +47,8 @@ def get_tables(page):
     cleaned_list = [list[1:] for list in no_blanks_list]
     return cleaned_list
 
-def scrape_pdfs(pdf):
+def scrape_pdfs(pdf_content):
+    pdf = plumber.open(pdf_content)
     """
     Get PDF EOD date
     """
