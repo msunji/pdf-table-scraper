@@ -1,4 +1,3 @@
-import re
 from io import BytesIO
 import requests
 import pdfplumber as plumber
