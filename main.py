@@ -7,7 +7,7 @@ import pandas as pd
 from modules import gsheet_actions
 from modules import scraper
 
-def clean_data(data, date, *ignore, report_type):
+def clean_update_data(data, date, *ignore, report_type):
   # Set data types
   data_types = {
     "Symbol": object,
@@ -50,29 +50,28 @@ def clean_data(data, date, *ignore, report_type):
     # Get portfolio stock codes
     portfolio_stocks = gsheet_actions.get_ws_col_vals("stocks", 1)
 
-    # Return filtered data - should only show portfolio stocks
-    # Push new data to spreadsheet
+    # Push filtered dataframe to "portfolio_eod_mkt_report" sheet where daily EOD data lives
     return (
-      gsheet_actions.update_sheet("test_worksheet", pdf_data[pdf_data["Symbol"].isin(portfolio_stocks)]
+      gsheet_actions.update_sheet("portfolio_eod_mkt_report", pdf_data[pdf_data["Symbol"].isin(portfolio_stocks)]
       .values.tolist())
     )
   elif report_type.lower() == "weekly":
     # Get weekly report stock codes and respective categories (2 cols)
-    # weekly_stocks = pd.DataFrame(gsheet_actions.get_all_ws_recordscords("wow_report_stocks"))
-    weekly_stocks = gsheet_actions.get_all_ws_records("wow_report_stocks")
-    weekly_stocks_df = pd.DataFrame(weekly_stocks)
-    # Get destination worksheet for data
-    # weekly_report_data = gsheet_actions.get_worksheet("test_worksheet")
+    weekly_stocks = gsheet_actions.get_ws_col_vals("wow_report_stocks", 1)
+    weekly_stocks_class = gsheet_actions.get_ws_col_vals("wow_report_stocks", 2)
 
-    # filtered_data = pdf_data[pdf_data["Symbol"].isin(list(weekly_stocks["Symbol"]))]
-    print(weekly_stocks_df)
+    # Filter datagrame
+    filtered_data = pdf_data[pdf_data["Symbol"].isin(weekly_stocks)]
 
-    return weekly_stocks
-    # return (
-    #   pd
-    #   .merge(filtered_data, weekly_stocks, on="Symbol")
-    #   .reindex(columns=["Symbol", "Mid Cap or Other", "Date", "Bid", "Ask", "Open", "High", "Low", "Close", "Volume", "Value PHP", "Net Foreign"])
-    # )
+    weekly_stocks_df = (
+      pd.DataFrame({
+        "Symbol": weekly_stocks,
+        "Index or other": weekly_stocks_class
+      })
+      .merge(filtered_data, on="Symbol")
+    )
+    # print(weekly_stocks_df.head())
+    return gsheet_actions.update_sheet("test_worksheet", weekly_stocks_df.values.tolist())
   else:
     raise TypeError("Keyword argument not recognised")
 
@@ -85,11 +84,9 @@ def extract_EOD_data(url, *ignore, report_type):
     pdf_data, pdf_date = scraper.scrape_pdfs(pdf)
   except:
     print('Something went wrong')
-  return clean_data(pdf_data, pdf_date, report_type=report_type)
+  return clean_update_data(pdf_data, pdf_date, report_type=report_type)
 
 extract_EOD_data("https://documents.pse.com.ph/market_report/December%2006,%202023-EOD.pdf", report_type="weekly")
-
-# wow_eod.append_rows(cleaned_data.values.tolist())
 
 # Export as CSV
 # cleaned_data.to_csv("Dec5.csv", index=False)
