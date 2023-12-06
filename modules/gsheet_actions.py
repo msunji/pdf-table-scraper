@@ -28,4 +28,5 @@ def get_ws_col_vals(worksheet_name, col_val):
   return ph_equity_sh.worksheet(worksheet_name).col_values(col_val)
 
 def update_sheet(worksheet_name, data):
-  worksheet_name.append_rows(data.tolist())
+  worksheet_to_update = get_worksheet(worksheet_name)
+  worksheet_to_update.append_rows(data)
