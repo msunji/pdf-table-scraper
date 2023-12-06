@@ -1,6 +1,5 @@
 from io import BytesIO
 import requests
-import pdfplumber as plumber
 import pandas as pd
 
 from modules import gsheet_actions
@@ -79,8 +78,7 @@ def extract_EOD_data(url, *ignore, report_type):
     global pdf_data
     req = requests.get(url)
     temp = BytesIO(req.content)
-    pdf = plumber.open(temp)
-    pdf_data, pdf_date = scraper.scrape_pdfs(pdf)
+    pdf_data, pdf_date = scraper.scrape_pdfs(temp)
   except:
     print('Something went wrong')
   return clean_update_data(pdf_data, pdf_date, report_type=report_type)
