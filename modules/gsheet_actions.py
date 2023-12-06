@@ -18,14 +18,14 @@ credentials = {
 all_sheets = gs.service_account_from_dict(credentials)
 ph_equity_sh = all_sheets.open("PH Equity Data")
 
-def getWorksheet(worksheet_name):
+def get_worksheet(worksheet_name):
   return ph_equity_sh.worksheet(worksheet_name)
 
-def getAllWSRecords(worksheet_name):
-  return ph_equity_sh.worksheet(worksheet_name)
+def get_all_ws_records(worksheet_name):
+  return ph_equity_sh.worksheet(worksheet_name).get_all_records()
 
-def getWSColVals(worksheet_name, col_val):
+def get_ws_col_vals(worksheet_name, col_val):
   return ph_equity_sh.worksheet(worksheet_name).col_values(col_val)
 
-def updateSheet(worksheet_name, data):
+def update_sheet(worksheet_name, data):
   worksheet_name.append_rows(data.tolist())
