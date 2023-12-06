@@ -6,6 +6,11 @@ from modules import gsheet_actions
 from modules import scraper
 
 def clean_update_data(data, date, *ignore, report_type):
+  """
+  This takes the extracted data from the EOD report, narrows it down to the data for stocks in a
+  specified list (portfolio stocks or weekly report stocks).
+  Finally, it adds the new data to Google Sheets.
+  """
   # Set data types
   data_types = {
     "Symbol": object,
@@ -74,6 +79,9 @@ def clean_update_data(data, date, *ignore, report_type):
     raise TypeError("Keyword argument not recognised")
 
 def extract_EOD_data(url, *ignore, report_type):
+  """
+  Takes the PDF url, scrapes the data, and passes it to the clean_update_data function for further tidying up and updating Google Sheets
+  """
   try:
     global pdf_data
     req = requests.get(url)
