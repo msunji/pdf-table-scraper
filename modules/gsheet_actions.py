@@ -21,9 +21,6 @@ ph_equity_sh = all_sheets.open("PH Equity Data")
 def get_worksheet(worksheet_name):
   return ph_equity_sh.worksheet(worksheet_name)
 
-def get_all_ws_records(worksheet_name):
-  return ph_equity_sh.worksheet(worksheet_name).get_all_records()
-
 def get_ws_col_vals(worksheet_name, col_val):
   return ph_equity_sh.worksheet(worksheet_name).col_values(col_val)
 
