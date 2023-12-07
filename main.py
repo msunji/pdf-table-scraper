@@ -69,12 +69,12 @@ def clean_update_data(data, date, *ignore, report_type):
     weekly_stocks_df = (
       pd.DataFrame({
         "Symbol": weekly_stocks,
-        "Index or other": weekly_stocks_class
+        "Midcap or other": weekly_stocks_class
       })
       .merge(filtered_data, on="Symbol")
     )
     # print(weekly_stocks_df.head())
-    return gsheet_actions.update_sheet("test_worksheet", weekly_stocks_df.values.tolist())
+    return gsheet_actions.update_sheet("wow_eod_mkt_report", weekly_stocks_df.values.tolist())
   else:
     raise TypeError("Keyword argument not recognised")
 
