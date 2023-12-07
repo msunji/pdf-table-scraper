@@ -73,7 +73,8 @@ def clean_update_data(data, date, *ignore, report_type):
       })
       .merge(filtered_data, on="Symbol")
     )
-    # print(weekly_stocks_df.head())
+    # return
+    # Push to "wow_eod_mkt_report" worksheet
     return gsheet_actions.update_sheet("wow_eod_mkt_report", weekly_stocks_df.values.tolist())
   else:
     raise TypeError("Keyword argument not recognised")
@@ -91,7 +92,7 @@ def extract_EOD_data(url, *ignore, report_type):
     print('Something went wrong')
   return clean_update_data(pdf_data, pdf_date, report_type=report_type)
 
-extract_EOD_data("https://documents.pse.com.ph/market_report/December%2006,%202023-EOD.pdf", report_type="weekly")
+extract_EOD_data("https://documents.pse.com.ph/market_report/December%2007,%202023-EOD.pdf", report_type="daily")
 
 # Export as CSV
 # cleaned_data.to_csv("Dec5.csv", index=False)
