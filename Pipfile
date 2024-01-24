@@ -8,6 +8,8 @@ pandas = "*"
 pdfplumber = "*"
 gspread = "*"
 requests = "*"
+urllib3 = "==1.26.6"
+pyarrow = "*"
 
 [dev-packages]
 
