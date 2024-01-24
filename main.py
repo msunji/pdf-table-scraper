@@ -92,7 +92,7 @@ def extract_EOD_data(url, *ignore, report_type):
     print('Something went wrong')
   return clean_update_data(pdf_data, pdf_date, report_type=report_type)
 
-extract_EOD_data("https://documents.pse.com.ph/market_report/January%2022,%202024-EOD.pdf", report_type="daily")
+extract_EOD_data("https://documents.pse.com.ph/market_report/January%2023,%202024-EOD.pdf", report_type="daily")
 
 # Export as CSV
 # cleaned_data.to_csv("Dec5.csv", index=False)
