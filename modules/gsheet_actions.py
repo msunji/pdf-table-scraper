@@ -32,5 +32,6 @@ def get_first_empty_cell(worksheet_name):
 
 def update_sheet(worksheet_name, data):
   worksheet_to_update = get_worksheet(worksheet_name)
+  worksheet_to_update.add_rows(1)
   worksheet_to_update.update("A" + get_first_empty_cell(worksheet_to_update), data)
 
