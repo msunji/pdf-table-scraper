@@ -88,11 +88,12 @@ def extract_EOD_data(url, *ignore, report_type):
     req = requests.get(url)
     temp = BytesIO(req.content)
     pdf_data, pdf_date = scraper.scrape_pdfs(temp)
+    print('Successfully scraped data')
   except:
     print('Something went wrong')
   return clean_update_data(pdf_data, pdf_date, report_type=report_type)
 
-extract_EOD_data("https://documents.pse.com.ph/market_report/January%2026,%202024-EOD.pdf", report_type="daily")
+extract_EOD_data("https://documents.pse.com.ph/market_report/February%2005,%202024-EOD.pdf", report_type="daily")
 
 # Export as CSV
 # cleaned_data.to_csv("Dec5.csv", index=False)
